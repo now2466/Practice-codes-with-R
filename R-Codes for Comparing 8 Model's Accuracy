@@ -1,0 +1,472 @@
+###########These codes are implemented by YoungminYoon#####################
+##1st, load data in caret library                                        ##
+##2nd, Simple Data cleasing                                              ##
+##3rd, Feature selection with step() function                            ##
+##4th, Modeling each models with selected features                       ##
+##5th, Calculate those models and applying CV                            ##
+##6th, Comparing them and simply visualizing                             ##
+###########################################################################
+
+
+##################################Codes###################################################
+
+library(tidyverse)
+library(datarium)
+library(caret)
+library(dplyr)
+library(kknn)
+library(ROCR)
+library(MASS)
+library(kernlab)
+library(rpart)
+library(rpart.plot)
+library(janitor)
+library(biotools)
+library(party)
+library(mda)
+library(adabag)
+
+##############################Data Segmented#######################################3
+
+data(segmentationData)
+data_seg<-segmentationData %>% 
+  dplyr:::select(-c(Cell,Case))
+
+data_seg<-data_seg %>% 
+  clean_names()
+
+randIdx<-sample(1:nrow(data_seg))
+data_seg<-data_seg[randIdx,]
+
+glm(class~.,data = data_seg, family="binomial") %>% 
+  step(direction = "both")
+
+
+accuracys_seg<-function(trainset,testset)
+{
+  #########################################################################################
+  
+  lda_seg<-lda(class ~ area_ch1 + avg_inten_ch1 + avg_inten_ch2 + 
+                 avg_inten_ch3 + avg_inten_ch4 + convex_hull_area_ratio_ch1 + 
+                 diff_inten_density_ch1 + diff_inten_density_ch4 + entropy_inten_ch3 + 
+                 entropy_inten_ch4 + eq_circ_diam_ch1 + eq_ellipse_lwr_ch1 + 
+                 eq_sphere_vol_ch1 + fiber_align2ch4 + fiber_length_ch1 + 
+                 fiber_width_ch1 + inten_cooc_entropy_ch4 + inten_cooc_max_ch3 + 
+                 kurt_inten_ch4 + shape_bfr_ch1 + shape_lwr_ch1 + shape_p2a_ch1 + 
+                 skew_inten_ch1 + skew_inten_ch4 + total_inten_ch1 + total_inten_ch3 + 
+                 var_inten_ch1 + var_inten_ch4 + x_centroid, 
+               data = trainset)
+  
+  qda_seg<-qda(class ~ area_ch1 + avg_inten_ch1 + avg_inten_ch2 + 
+                 avg_inten_ch3 + avg_inten_ch4 + convex_hull_area_ratio_ch1 + 
+                 diff_inten_density_ch1 + diff_inten_density_ch4 + entropy_inten_ch3 + 
+                 entropy_inten_ch4 + eq_circ_diam_ch1 + eq_ellipse_lwr_ch1 + 
+                 eq_sphere_vol_ch1 + fiber_align2ch4 + fiber_length_ch1 + 
+                 fiber_width_ch1 + inten_cooc_entropy_ch4 + inten_cooc_max_ch3 + 
+                 kurt_inten_ch4 + shape_bfr_ch1 + shape_lwr_ch1 + shape_p2a_ch1 + 
+                 skew_inten_ch1 + skew_inten_ch4 + total_inten_ch1 + total_inten_ch3 + 
+                 var_inten_ch1 + var_inten_ch4 + x_centroid, 
+               data = trainset)
+  
+  tree_seg<- rpart(class ~ area_ch1 + avg_inten_ch1 + avg_inten_ch2 + 
+                     avg_inten_ch3 + avg_inten_ch4 + convex_hull_area_ratio_ch1 + 
+                     diff_inten_density_ch1 + diff_inten_density_ch4 + entropy_inten_ch3 + 
+                     entropy_inten_ch4 + eq_circ_diam_ch1 + eq_ellipse_lwr_ch1 + 
+                     eq_sphere_vol_ch1 + fiber_align2ch4 + fiber_length_ch1 + 
+                     fiber_width_ch1 + inten_cooc_entropy_ch4 + inten_cooc_max_ch3 + 
+                     kurt_inten_ch4 + shape_bfr_ch1 + shape_lwr_ch1 + shape_p2a_ch1 + 
+                     skew_inten_ch1 + skew_inten_ch4 + total_inten_ch1 + total_inten_ch3 + 
+                     var_inten_ch1 + var_inten_ch4 + x_centroid, 
+                   data = trainset)
+  rpart.plot(tree_seg)
+  
+  svm_seg<-ksvm(class ~ area_ch1 + avg_inten_ch1 + avg_inten_ch2 + 
+                  avg_inten_ch3 + avg_inten_ch4 + convex_hull_area_ratio_ch1 + 
+                  diff_inten_density_ch1 + diff_inten_density_ch4 + entropy_inten_ch3 + 
+                  entropy_inten_ch4 + eq_circ_diam_ch1 + eq_ellipse_lwr_ch1 + 
+                  eq_sphere_vol_ch1 + fiber_align2ch4 + fiber_length_ch1 + 
+                  fiber_width_ch1 + inten_cooc_entropy_ch4 + inten_cooc_max_ch3 + 
+                  kurt_inten_ch4 + shape_bfr_ch1 + shape_lwr_ch1 + shape_p2a_ch1 + 
+                  skew_inten_ch1 + skew_inten_ch4 + total_inten_ch1 + total_inten_ch3 + 
+                  var_inten_ch1 + var_inten_ch4 + x_centroid, 
+                data = trainset)
+  
+  k3nn_seg<-kknn(class ~ area_ch1 + avg_inten_ch1 + avg_inten_ch2 + 
+                   avg_inten_ch3 + avg_inten_ch4 + convex_hull_area_ratio_ch1 + 
+                   diff_inten_density_ch1 + diff_inten_density_ch4 + entropy_inten_ch3 + 
+                   entropy_inten_ch4 + eq_circ_diam_ch1 + eq_ellipse_lwr_ch1 + 
+                   eq_sphere_vol_ch1 + fiber_align2ch4 + fiber_length_ch1 + 
+                   fiber_width_ch1 + inten_cooc_entropy_ch4 + inten_cooc_max_ch3 + 
+                   kurt_inten_ch4 + shape_bfr_ch1 + shape_lwr_ch1 + shape_p2a_ch1 + 
+                   skew_inten_ch1 + skew_inten_ch4 + total_inten_ch1 + total_inten_ch3 + 
+                   var_inten_ch1 + var_inten_ch4 + x_centroid , train =trainset, test = testset , k=3)
+  k5nn_seg<-kknn(class ~ area_ch1 + avg_inten_ch1 + avg_inten_ch2 + 
+                   avg_inten_ch3 + avg_inten_ch4 + convex_hull_area_ratio_ch1 + 
+                   diff_inten_density_ch1 + diff_inten_density_ch4 + entropy_inten_ch3 + 
+                   entropy_inten_ch4 + eq_circ_diam_ch1 + eq_ellipse_lwr_ch1 + 
+                   eq_sphere_vol_ch1 + fiber_align2ch4 + fiber_length_ch1 + 
+                   fiber_width_ch1 + inten_cooc_entropy_ch4 + inten_cooc_max_ch3 + 
+                   kurt_inten_ch4 + shape_bfr_ch1 + shape_lwr_ch1 + shape_p2a_ch1 + 
+                   skew_inten_ch1 + skew_inten_ch4 + total_inten_ch1 + total_inten_ch3 + 
+                   var_inten_ch1 + var_inten_ch4 + x_centroid , train =trainset, test = testset , k=5)
+  k7nn_seg<-kknn(class ~ area_ch1 + avg_inten_ch1 + avg_inten_ch2 + 
+                   avg_inten_ch3 + avg_inten_ch4 + convex_hull_area_ratio_ch1 + 
+                   diff_inten_density_ch1 + diff_inten_density_ch4 + entropy_inten_ch3 + 
+                   entropy_inten_ch4 + eq_circ_diam_ch1 + eq_ellipse_lwr_ch1 + 
+                   eq_sphere_vol_ch1 + fiber_align2ch4 + fiber_length_ch1 + 
+                   fiber_width_ch1 + inten_cooc_entropy_ch4 + inten_cooc_max_ch3 + 
+                   kurt_inten_ch4 + shape_bfr_ch1 + shape_lwr_ch1 + shape_p2a_ch1 + 
+                   skew_inten_ch1 + skew_inten_ch4 + total_inten_ch1 + total_inten_ch3 + 
+                   var_inten_ch1 + var_inten_ch4 + x_centroid , train =trainset, test = testset , k=7)
+  
+  
+  ##################################  BAG  ###################################################################
+  ##install.packages("adabag")
+  ##library(adabag)
+  bagging_seg<-bagging(class ~ area_ch1 + avg_inten_ch1 + avg_inten_ch2 + 
+                         avg_inten_ch3 + avg_inten_ch4 + convex_hull_area_ratio_ch1 + 
+                         diff_inten_density_ch1 + diff_inten_density_ch4 + entropy_inten_ch3 + 
+                         entropy_inten_ch4 + eq_circ_diam_ch1 + eq_ellipse_lwr_ch1 + 
+                         eq_sphere_vol_ch1 + fiber_align2ch4 + fiber_length_ch1 + 
+                         fiber_width_ch1 + inten_cooc_entropy_ch4 + inten_cooc_max_ch3 + 
+                         kurt_inten_ch4 + shape_bfr_ch1 + shape_lwr_ch1 + shape_p2a_ch1 + 
+                         skew_inten_ch1 + skew_inten_ch4 + total_inten_ch1 + total_inten_ch3 + 
+                         var_inten_ch1 + var_inten_ch4 + x_centroid, 
+                       data = trainset, mfinal = 100)
+  
+  ####################################################################################################
+  
+  
+  
+  ###################################  CFOREST   #############################################################
+  ##install.packages("party")
+  ##library(party)
+  cforest_seg<-cforest(class ~ area_ch1 + avg_inten_ch1 + avg_inten_ch2 + 
+                         avg_inten_ch3 + avg_inten_ch4 + convex_hull_area_ratio_ch1 + 
+                         diff_inten_density_ch1 + diff_inten_density_ch4 + entropy_inten_ch3 + 
+                         entropy_inten_ch4 + eq_circ_diam_ch1 + eq_ellipse_lwr_ch1 + 
+                         eq_sphere_vol_ch1 + fiber_align2ch4 + fiber_length_ch1 + 
+                         fiber_width_ch1 + inten_cooc_entropy_ch4 + inten_cooc_max_ch3 + 
+                         kurt_inten_ch4 + shape_bfr_ch1 + shape_lwr_ch1 + shape_p2a_ch1 + 
+                         skew_inten_ch1 + skew_inten_ch4 + total_inten_ch1 + total_inten_ch3 + 
+                         var_inten_ch1 + var_inten_ch4 + x_centroid, 
+                       data = trainset)
+  ######################################################################################################
+  
+  ######################################    ########################################################3
+  ##install.packages("mda")
+  ##library(mda)
+  mda_seg<-mda(class ~ area_ch1 + avg_inten_ch1 + avg_inten_ch2 + 
+                 avg_inten_ch3 + avg_inten_ch4 + convex_hull_area_ratio_ch1 + 
+                 diff_inten_density_ch1 + diff_inten_density_ch4 + entropy_inten_ch3 + 
+                 entropy_inten_ch4 + eq_circ_diam_ch1 + eq_ellipse_lwr_ch1 + 
+                 eq_sphere_vol_ch1 + fiber_align2ch4 + fiber_length_ch1 + 
+                 fiber_width_ch1 + inten_cooc_entropy_ch4 + inten_cooc_max_ch3 + 
+                 kurt_inten_ch4 + shape_bfr_ch1 + shape_lwr_ch1 + shape_p2a_ch1 + 
+                 skew_inten_ch1 + skew_inten_ch4 + total_inten_ch1 + total_inten_ch3 + 
+                 var_inten_ch1 + var_inten_ch4 + x_centroid, 
+               data = trainset)
+  ################################################################################
+  
+  ############################### Prediction######################################
+  prediction_lda_seg <- predict(lda_seg, newdata = testset)
+  
+  prediction_qda_seg <- predict(qda_seg, newdata = testset)
+  
+  prediction_tree_seg <- predict(tree_seg, newdata = testset, type="class")
+  
+  prediction_k3nn_seg <- predict(k3nn_seg, newdata = testset)
+  prediction_k5nn_seg <- predict(k5nn_seg, newdata = testset)
+  prediction_k7nn_seg <- predict(k7nn_seg, newdata = testset)
+  
+  prediction_svm_seg <- predict(svm_seg, newdata = testset)
+  
+  prediction_bagging_seg <- predict(bagging_seg,newdata = testset)
+  
+  prediction_cforest_seg <- predict(cforest_seg,newdata = testset)
+  
+  prediction_mda_seg <- predict(mda_seg,newdata = testset)
+  
+  ##################################################################################
+  
+  ############################# Confusion #######################################
+  
+  confusion_lda_seg <- table(predicted = prediction_lda_seg$class,
+                             Diagnosis = testset$class)
+  confusion_qda_seg <- table(predicted = prediction_qda_seg$class,
+                             Diagnosis = testset$class)
+  confusion_tree_seg <- table(predicted = prediction_tree_seg,
+                              Diagnosis = testset$class)
+  
+  confusion_k3nn_seg <- table(predicted = prediction_k3nn_seg,
+                             Diagnosis = testset$class)
+  confusion_k5nn_seg <- table(predicted = prediction_k5nn_seg,
+                             Diagnosis = testset$class)
+  confusion_k7nn_seg <- table(predicted = prediction_k7nn_seg,
+                             Diagnosis = testset$class)
+  
+  confusion_svm_seg <- table(predicted = prediction_svm_seg,
+                             Diagnosis = testset$class)
+  confusion_bagging_seg <- table(predicted = prediction_bagging_seg$class,
+                                 Diagnosis = testset$class)
+  
+  confusion_cforest_seg <- table(predicted = prediction_cforest_seg,
+                                 Diagnosis = testset$class)
+  
+  confusion_mda_seg <- table(predicted = prediction_mda_seg,
+                             Diagnosis = testset$class)
+  
+  
+  Accuracy_lda_seg <- sum(diag(confusion_lda_seg)/sum(confusion_lda_seg))*100
+  Accuracy_qda_seg <- sum(diag(confusion_qda_seg)/sum(confusion_qda_seg))*100
+  Accuracy_tree_seg <- sum(diag(confusion_tree_seg)/sum(confusion_tree_seg))*100
+  Accuracy_k3nn_seg <- sum(diag(confusion_k3nn_seg)/sum(confusion_k3nn_seg))*100
+  Accuracy_k5nn_seg <- sum(diag(confusion_k5nn_seg)/sum(confusion_k5nn_seg))*100
+  Accuracy_k7nn_seg <- sum(diag(confusion_k7nn_seg)/sum(confusion_k7nn_seg))*100
+  Accuracy_svm_seg <- sum(diag(confusion_svm_seg)/sum(confusion_svm_seg))*100
+  Accuracy_bagging_seg <- sum(diag(confusion_bagging_seg)/sum(confusion_bagging_seg))*100
+  Accuracy_cforest_seg <- sum(diag(confusion_cforest_seg)/sum(confusion_cforest_seg))*100
+  Accuracy_mda_seg <- sum(diag(confusion_mda_seg)/sum(confusion_mda_seg))*100
+  
+  return(data.frame(Accuracy_lda_seg,Accuracy_qda_seg,Accuracy_tree_seg,Accuracy_k3nn_seg,Accuracy_k5nn_seg,Accuracy_k7nn_seg,Accuracy_svm_seg,Accuracy_bagging_seg,Accuracy_cforest_seg,Accuracy_mda_seg)
+  )
+}
+
+
+seg_folds<-createFolds(data_seg$class,k=5)
+
+
+acc_1<-accuracys_seg(data_seg[-seg_folds$Fold5,],data_seg[seg_folds$Fold5,])
+acc_2<-accuracys_seg(data_seg[-seg_folds$Fold4,],data_seg[seg_folds$Fold4,])
+acc_3<-accuracys_seg(data_seg[-seg_folds$Fold3,],data_seg[seg_folds$Fold3,])
+acc_4<-accuracys_seg(data_seg[-seg_folds$Fold2,],data_seg[seg_folds$Fold2,])
+acc_5<-accuracys_seg(data_seg[-seg_folds$Fold1,],data_seg[seg_folds$Fold1,])
+
+acc<-array()
+for(i in 1:10)
+{
+  acc[i]<-(acc_1[i]+acc_2[i]+acc_3[i]+acc_4[i]+acc_5[i])/5
+}
+seg_lda<-as.numeric(acc[1])
+seg_qda<-as.numeric(acc[2])
+seg_tree<-as.numeric(acc[3])
+seg_k3nn<-as.numeric(acc[4])
+seg_k5nn<-as.numeric(acc[5])
+seg_k7nn<-as.numeric(acc[6])
+seg_svm<-as.numeric(acc[7])
+seg_bagging<-as.numeric(acc[8])
+seg_cforest<-as.numeric(acc[9])
+seg_mda<-as.numeric(acc[10])
+accuracy_seg<-tibble(seg_lda,seg_qda,seg_tree,seg_k3nn,seg_k5nn,seg_k7nn,seg_svm,seg_bagging,seg_cforest,seg_mda)
+boxplot(accuracy_seg,names = c("LDA","QDA","DT","3NN","5NN","7NN","SVM","BAG","CF","MDA"), main = "Seg Accuracy")
+
+
+
+##########################################################################################################
+
+
+
+##################################################################################
+############################## Data scat #########################################
+#################################################################################
+data(scat)
+
+
+scat<-scat %>% 
+  clean_names()
+data_scat<-scat %>% 
+  dplyr::select(-c(month,year,site,location)) %>% 
+  na.omit()
+
+
+randIdx=sample(1:nrow(data_scat))
+data_scat<-data_scat[randIdx,]
+
+
+
+
+
+
+############################### Feature Selection  ###########################################
+
+lm_scat <- glm(species~.,data=data_scat, family = "binomial")
+
+
+summary(lm_scat)
+##feature selection
+step(lm_scat,direction = "both")
+#############################################################################################
+
+
+
+
+
+
+
+
+
+#################### confusion Matrix ?????? #######################################
+foldData<-createDataPartition(data_scat$species,p=0.8)
+lda_scat <- lda(species~d13c+d15n+cn+segmented+scrape,data=data_scat[foldData$Resample1,])
+prediction_lda_scat <- predict(lda_scat, newdata = data_scat[-foldData$Resample1,])
+confusionMatrix(prediction_lda_scat$class,
+                data_scat[-foldData$Resample1,]$species)
+
+#####################################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+accuracy_scat<-function(trainset,testset)
+{
+  ################################ LDA & QDA & SVM ####################################################
+  lda_scat <- lda(species~d13c+d15n+cn+segmented+scrape,data=trainset)
+  ##step�� ???? ???? feature selection ???????? ???? feature?鸸 ?־ lda ?𵨸?
+  
+  
+  
+  qda_scat <- qda(species~d13c+d15n+cn+segmented,data=trainset)
+  ##lda?? ?? feature???߿??? scrape?? qda?? ?Ұ????ϵ??? ?Ѵ? scrape?? ??��?? coyote ?׷??? rank deficiency?? ??��?? ??????.
+  
+  tree_scat<- rpart(species~d13c+d15n+cn+segmented+scrape, data=data_scat)
+  rpart.plot(tree_scat)
+  tree_scat
+  ##tree ????
+  
+  
+  svm_scat <- ksvm(species ~ d13c+cn+scrape+segmented+d15n, data = trainset, kernel ="rbf",
+                   type = "C-svc")
+  ##svm_scat ?????????? ?ʿ??? ??ü cv????????
+  
+  ########################################################################################################33
+  
+  
+  
+  ######################## KNN ############################################################
+  
+  
+  k3nn_scat<-kknn(species ~d13c+cn+scrape+segmented+d15n , train =trainset, test = testset , k=3)
+  k5nn_scat<-kknn(species ~d13c+cn+scrape+segmented+d15n , train =trainset, test = testset , k=5)
+  k7nn_scat<-kknn(species ~d13c+cn+scrape+segmented+d15n , train =trainset, test = testset , k=7)
+  
+  
+  #########################################################################################################################
+  
+  
+  ##################################  BAG  ###################################################################
+  ##install.packages("adabag")
+  ##library(adabag)
+  bagging_scat<-bagging(species ~d13c+cn+scrape+segmented+d15n ,data = trainset, mfinal = 100)
+  
+  ####################################################################################################
+  
+  
+  
+  ###################################  CFOREST   #############################################################
+  ##install.packages("party")
+  ##library(party)
+  cforest_scat<-cforest(species ~d13c+cn+scrape+segmented+d15n ,data = trainset)
+  ######################################################################################################
+  
+  ######################################    ########################################################3
+  ##install.packages("mda")
+  ##library(mda)
+  mda_scat<-mda(species ~d13c+cn+scrape+segmented+d15n ,data = trainset)
+  ################################################################################
+  
+  
+  ####################### Prediction ##############################
+  
+  prediction_lda_scat <- predict(lda_scat, newdata = testset)
+  
+  prediction_qda_scat <- predict(qda_scat, newdata = testset)
+  
+  prediction_tree_scat <- predict(tree_scat, newdata = testset, type="class")
+  
+  prediction_k3nn_scat <- predict(k3nn_scat, newdata = testset)
+  prediction_k5nn_scat <- predict(k5nn_scat, newdata = testset)
+  prediction_k7nn_scat <- predict(k7nn_scat, newdata = testset)
+  
+  prediction_svm_scat <- predict(svm_scat, newdata = testset)
+  
+  prediction_bagging_scat<-predict(bagging_scat,newdata = testset)
+  
+  prediction_cforest_scat<-predict(cforest_scat,newdata = testset)
+  
+  prediction_mda_scat<-predict(mda_scat,newdata = testset)
+  #################################### Confusion ########################################
+  
+  
+  
+  
+  confusion_lda_scat <- table(predicted = prediction_lda_scat$class,
+                              Diagnosis = testset$species)
+  confusion_qda_scat <- table(predicted = prediction_qda_scat$class,
+                              Diagnosis = testset$species)
+  confusion_tree_scat <- table(predicted = prediction_tree_scat,
+                               Diagnosis = testset$species)
+  confusion_k3nn_scat <- table(predicted = prediction_k3nn_scat,
+                              Diagnosis = testset$species)
+  confusion_k5nn_scat <- table(predicted = prediction_k5nn_scat,
+                              Diagnosis = testset$species)
+  confusion_k7nn_scat <- table(predicted = prediction_k7nn_scat,
+                              Diagnosis = testset$species)
+  confusion_svm_scat <- table(predicted = prediction_svm_scat,
+                              Diagnosis = testset$species)
+  confusion_bagging_scat <- table(predicted = prediction_bagging_scat$class,
+                                  Diagnosis = testset$species)
+  
+  confusion_cforest_scat<-table(predicted = prediction_cforest_scat,
+                                Diagnosis = testset$species)
+  
+  confusion_mda_scat<-table(predicted = prediction_mda_scat,
+                            Diagnosis = testset$species)
+  
+  Accuracy_lda_scat<-sum(diag(confusion_lda_scat)/sum(confusion_lda_scat))*100
+  Accuracy_qda_scat<-sum(diag(confusion_qda_scat)/sum(confusion_qda_scat))*100
+  Accuracy_tree_scat<-sum(diag(confusion_tree_scat)/sum(confusion_tree_scat))*100
+  Accuracy_k3nn_scat<-sum(diag(confusion_k3nn_scat)/sum(confusion_k3nn_scat))*100
+  Accuracy_k5nn_scat<-sum(diag(confusion_k5nn_scat)/sum(confusion_k5nn_scat))*100
+  Accuracy_k7nn_scat<-sum(diag(confusion_k7nn_scat)/sum(confusion_k7nn_scat))*100
+  Accuracy_svm_scat<-sum(diag(confusion_svm_scat)/sum(confusion_svm_scat))*100
+  Accuracy_bagging_scat<-sum(diag(confusion_bagging_scat)/sum(confusion_bagging_scat))*100
+  Accuracy_cforest_scat<-sum(diag(confusion_cforest_scat)/sum(confusion_cforest_scat))*100
+  Accuracy_mda_scat<-sum(diag(confusion_mda_scat)/sum(confusion_mda_scat))*100
+  
+  return(data.frame(Accuracy_lda_scat,Accuracy_qda_scat,Accuracy_tree_scat,Accuracy_k3nn_scat,Accuracy_k5nn_scat,Accuracy_k7nn_scat,Accuracy_svm_scat,Accuracy_bagging_scat,Accuracy_cforest_scat,Accuracy_mda_scat))
+}
+
+scat_folds<-createFolds(data_scat$species,k=5)
+
+acc_scat_1<-accuracy_scat(data_scat[-scat_folds$Fold1,],data_scat[scat_folds$Fold1,])
+acc_scat_2<-accuracy_scat(data_scat[-scat_folds$Fold1,],data_scat[scat_folds$Fold1,])
+acc_scat_3<-accuracy_scat(data_scat[-scat_folds$Fold1,],data_scat[scat_folds$Fold1,])
+acc_scat_4<-accuracy_scat(data_scat[-scat_folds$Fold1,],data_scat[scat_folds$Fold1,])
+acc_scat_5<-accuracy_scat(data_scat[-scat_folds$Fold1,],data_scat[scat_folds$Fold1,])
+
+
+acc_scat<-array()
+for(i in 1:10)
+{
+  acc_scat[i]<-(acc_scat_1[i]+acc_scat_2[i]+acc_scat_3[i]+acc_scat_4[i]+acc_scat_5[i])/5
+}
+scat_lda<-as.numeric(acc_scat[1])
+scat_qda<-as.numeric(acc_scat[2])
+scat_tree<-as.numeric(acc_scat[3])
+scat_k3nn<-as.numeric(acc_scat[4])
+scat_k5nn<-as.numeric(acc_scat[5])
+scat_k7nn<-as.numeric(acc_scat[6])
+scat_svm<-as.numeric(acc_scat[7])
+scat_bagging<-as.numeric(acc_scat[8])
+scat_cforest<-as.numeric(acc_scat[9])
+scat_mda<-as.numeric(acc_scat[10])
+accuracy_scat<-tibble(scat_lda,scat_qda,scat_tree,scat_k3nn,scat_k5nn,scat_k7nn,scat_svm,scat_bagging,scat_cforest,scat_mda)
+boxplot(accuracy_scat,names = c("LDA","QDA","DT","3NN","5NN","7NN","SVM","BAG","CF","MDA"), main = "Scat Accuracy")
